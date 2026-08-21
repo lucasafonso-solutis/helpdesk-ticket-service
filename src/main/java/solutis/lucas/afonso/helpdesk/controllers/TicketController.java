@@ -4,6 +4,8 @@ import java.net.URI;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,11 +29,20 @@ public class TicketController {
     @Operation(summary = "Create Ticket", description = "Create Ticket")
     @ApiResponse(responseCode = "200", description = "Create Ticket")
     @PostMapping
-        public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO,
-            UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO,
+        UriComponentsBuilder uriComponentsBuilder) {
         TicketDTO ticket = this.ticketService.create(ticketDTO);
         URI uri = uriComponentsBuilder.path("/tickets/{id}").buildAndExpand(ticket.id()).toUri();
 
         return ResponseEntity.created(uri).body(ticket);
+    }
+
+    @Operation(summary = "List Ticket by ID", description = "List Ticket By ID")
+    @ApiResponse(responseCode = "200", description = "List Ticket By ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketDTO> findById(@PathVariable Long id) {
+        return ticketService.listById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
