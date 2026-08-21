@@ -9,23 +9,28 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
 
 @Entity(name = "tickets")
 public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String title;
+    @Column(nullable = false)
     private String description;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TicketPriority priority;
     @Enumerated(EnumType.STRING)
     private TicketStatus ticketStatus;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TicketCategory ticketCategory;
-    @Column(name = "customer_id", nullable = false)
-    private Long costumerId;
-    @Column(name = "technician_id")
+    @Column(name = "customer_id", nullable = true)
+    private Long customerId;
+    @Column(name = "technician_id", nullable = true)
     private Long technicianId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -34,18 +39,30 @@ public class Ticket {
     }
 
     public Ticket(Long id, String title, String description, TicketPriority priority, TicketStatus ticketStatus,
-            TicketCategory ticketCategory, Long costumerId, Long technicianId, LocalDateTime createdAt,
+            TicketCategory ticketCategory, Long customerId, Long technicianId, LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.priority = priority;
-        this.ticketStatus = ticketStatus;
+        this.ticketStatus = TicketStatus.OPEN;
         this.ticketCategory = ticketCategory;
-        this.costumerId = costumerId;
+        this.customerId = customerId;
         this.technicianId = technicianId;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Ticket(TicketDTO ticketDTO) {
+        this.title = ticketDTO.title();
+        this.description = ticketDTO.description();
+        this.priority = ticketDTO.priority();
+        this.ticketStatus = TicketStatus.OPEN;
+        this.ticketCategory = ticketDTO.ticketCategory();
+        this.customerId = ticketDTO.customerId();
+        this.technicianId = ticketDTO.technicianId();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -96,12 +113,12 @@ public class Ticket {
         this.ticketCategory = ticketCategory;
     }
 
-    public Long getCostumerId() {
-        return costumerId;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public void setCostumerId(Long costumerId) {
-        this.costumerId = costumerId;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
     public Long getTechnicianId() {
