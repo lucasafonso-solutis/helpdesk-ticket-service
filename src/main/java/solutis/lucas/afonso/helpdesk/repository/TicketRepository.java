@@ -2,10 +2,10 @@ package solutis.lucas.afonso.helpdesk.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import java.util.List;
 
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long>{
-	public Optional<Ticket> findByTitle(String title);
+	public List<Ticket> findByTitle(String title);
 }

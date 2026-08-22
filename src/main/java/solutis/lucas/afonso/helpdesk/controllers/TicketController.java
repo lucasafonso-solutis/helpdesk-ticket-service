@@ -28,7 +28,7 @@ public class TicketController {
     }
 
     @Operation(summary = "Create Ticket", description = "Create Ticket")
-    @ApiResponse(responseCode = "200", description = "Create Ticket")
+    @ApiResponse(responseCode = "201", description = "Create Ticket")
     @PostMapping
     public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO,
         UriComponentsBuilder uriComponentsBuilder) {
@@ -56,5 +56,10 @@ public class TicketController {
         return this.ticketService.list();
     }
 
-
+    @Operation(summary = "Search Ticket By Title", description = "Search Ticket By Title")
+    @ApiResponse(responseCode = "200", description = "Search Ticket By Title")
+    @GetMapping("/search/{title}")
+    public List<TicketDTO> searchByTitle(@PathVariable String title) {
+        return this.ticketService.searchByTitle(title);
+    }
 }
