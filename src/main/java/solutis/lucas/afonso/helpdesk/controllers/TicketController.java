@@ -43,6 +43,8 @@ public class TicketController {
     @GetMapping("/{id}")
     public ResponseEntity<TicketDTO> findById(@PathVariable Long id) {
         return ticketService.listById(id)
+                .stream()
+                .findFirst()
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -53,4 +55,6 @@ public class TicketController {
     public List<TicketDTO> list() {
         return this.ticketService.list();
     }
+
+
 }

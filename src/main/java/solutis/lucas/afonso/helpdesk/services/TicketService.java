@@ -1,7 +1,6 @@
 package solutis.lucas.afonso.helpdesk.services;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -24,11 +23,15 @@ public class TicketService {
         return new TicketDTO(ticket);
     }
 
-    public Optional<TicketDTO> listById(Long id) {
-        return this.ticketRepository.findById(id).map(TicketDTO::new);
+    public List<TicketDTO> listById(Long id) {
+        return this.ticketRepository.findById(id).stream().map(TicketDTO::new).toList();
     }
 
     public List<TicketDTO> list() {
         return this.ticketRepository.findAll().stream().map(TicketDTO::new).toList();
+    }
+
+    public List<TicketDTO> searchByTitle(String title) {
+        return this.ticketRepository.findByTitle(title).stream().map(TicketDTO::new).toList();
     }
 }
