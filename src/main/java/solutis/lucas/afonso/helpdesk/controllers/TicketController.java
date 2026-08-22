@@ -1,6 +1,7 @@
 package solutis.lucas.afonso.helpdesk.controllers;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -10,12 +11,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
+import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
+import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
+import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
 import solutis.lucas.afonso.helpdesk.services.TicketService;
 
 @RestController
@@ -61,5 +67,20 @@ public class TicketController {
     @GetMapping("/search/{title}")
     public List<TicketDTO> searchByTitle(@PathVariable String title) {
         return this.ticketService.searchByTitle(title);
+    }
+
+    @Operation(summary = "Filter Tickets", description = "Filter Tickets")
+    @ApiResponse(responseCode = "200", description = "Filter Tickets")
+    @GetMapping("/filter")
+    public List<TicketDTO> filterTickets(
+            @RequestParam(required = false) TicketPriority ticketPriority,
+            @RequestParam(required = false) TicketStatus ticketStatus,
+            @RequestParam(required = false) TicketCategory ticketCategory,
+            @RequestParam(required = false) Long custumerId,
+            @RequestParam(required = false) Long technicianId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAt) {
+        return this.ticketService.filterTickets(ticketPriority, ticketStatus, ticketCategory,
+                custumerId, technicianId, createdAt, updatedAt);
     }
 }

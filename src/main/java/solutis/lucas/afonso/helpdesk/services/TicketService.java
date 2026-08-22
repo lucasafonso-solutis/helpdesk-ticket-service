@@ -1,11 +1,16 @@
 package solutis.lucas.afonso.helpdesk.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
+import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
+import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
+import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
 import solutis.lucas.afonso.helpdesk.repository.TicketRepository;
 
 @Service
@@ -33,5 +38,19 @@ public class TicketService {
 
     public List<TicketDTO> searchByTitle(String title) {
         return this.ticketRepository.findByTitle(title).stream().map(TicketDTO::new).toList();
+    }
+
+    public List<TicketDTO> filterTickets(TicketPriority ticketPriority, TicketStatus ticketStatus, TicketCategory ticketCategory, 
+                                            Long custumerId, Long technicianId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return this.ticketRepository.findAll().stream()
+            .filter(ticket -> ticketPriority == null || ticket.getPriority() == ticketPriority)
+            .filter(ticket -> ticketStatus == null || ticket.getTicketStatus() == ticketStatus)
+            .filter(ticket -> ticketCategory == null || ticket.getTicketCategory() == ticketCategory)
+            .filter(ticket -> custumerId == null || Objects.equals(ticket.getCustomerId(), custumerId))
+            .filter(ticket -> technicianId == null || Objects.equals(ticket.getTechnicianId(), technicianId))
+            .filter(ticket -> createdAt == null || Objects.equals(ticket.getCreatedAt(), createdAt))
+            .filter(ticket -> updatedAt == null || Objects.equals(ticket.getUpdatedAt(), updatedAt))
+            .map(TicketDTO::new)
+            .toList();
     }
 }
