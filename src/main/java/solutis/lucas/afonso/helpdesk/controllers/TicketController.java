@@ -1,6 +1,7 @@
 package solutis.lucas.afonso.helpdesk.controllers;
 
 import java.net.URI;
+import java.util.List;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -44,5 +45,12 @@ public class TicketController {
         return ticketService.listById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "List All Tickets", description = "List All Tickets")
+    @ApiResponse(responseCode = "200", description = "List All Tickets")
+    @GetMapping
+    public List<TicketDTO> list() {
+        return this.ticketService.list();
     }
 }
