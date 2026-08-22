@@ -1,0 +1,5 @@
+package solutis.lucas.afonso.helpdesk.events;
+
+public record TechnicianAssignmentEvent(Long ticketId, Long technicianId) {
+
+}

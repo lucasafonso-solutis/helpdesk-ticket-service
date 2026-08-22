@@ -15,6 +15,7 @@ import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
 import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
+import solutis.lucas.afonso.helpdesk.events.TechnicianAssignmentEvent;
 import solutis.lucas.afonso.helpdesk.repository.TicketRepository;
 
 @Service
@@ -100,9 +101,6 @@ public class TicketService {
         }
 
         return new TicketDTO(ticket);
-    }
-
-    private record TechnicianAssignmentEvent(Long ticketId, Long technicianId) {
     }
 
     public TicketDTO closeTicket(Long id) {
