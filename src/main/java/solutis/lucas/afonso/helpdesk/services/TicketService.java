@@ -64,7 +64,7 @@ public class TicketService {
             .toList();
     }
 
-    public TicketDTO updateTicket(Long id, TicketDTO ticketDTO, TicketPriority ticketPriority, TicketCategory ticketCategory, 
+    public TicketDTO updateTicket(Long id, TicketPriority ticketPriority, TicketCategory ticketCategory, 
                                     String description, TicketStatus ticketStatus) {                                 
         Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
         if (ticketPriority != null) {
@@ -103,5 +103,13 @@ public class TicketService {
     }
 
     private record TechnicianAssignmentEvent(Long ticketId, Long technicianId) {
+    }
+
+    public TicketDTO closeTicket(Long id) {
+        Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
+        ticket.setTicketStatus(TicketStatus.CLOSED);
+        ticket.setUpdatedAt(LocalDateTime.now());
+
+        return new TicketDTO(this.ticketRepository.save(ticket));
     }
 }

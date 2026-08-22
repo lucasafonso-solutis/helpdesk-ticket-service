@@ -81,13 +81,13 @@ public class TicketController {
     @PutMapping("/{id}")
     public ResponseEntity<TicketDTO> updateTicket(
             @PathVariable Long id,
-            @RequestBody(required = false) TicketDTO ticketDTO,
             @RequestParam(required = false) TicketPriority ticketPriority,
             @RequestParam(required = false) TicketCategory ticketCategory,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) TicketStatus ticketStatus) {
         TicketDTO updatedTicket = this.ticketService.updateTicket(
-                id, ticketDTO, ticketPriority, ticketCategory, description, ticketStatus);
+                id, ticketPriority, ticketCategory, description, ticketStatus);
+
         return ResponseEntity.ok(updatedTicket);
     }
 
@@ -96,6 +96,16 @@ public class TicketController {
     @PutMapping("/{id}/technician/{technicianId}")
     public ResponseEntity<TicketDTO> assignTechnician(@PathVariable Long id, @PathVariable Long technicianId) {
         TicketDTO updatedTicket = this.ticketService.assignTechnician(id, technicianId);
+
+        return ResponseEntity.ok(updatedTicket);
+    }
+
+    @Operation(summary = "Close Ticket", description = "Close Ticket")
+    @ApiResponse(responseCode = "200", description = "Close Ticket")
+    @PutMapping("/close/{id}")
+    public ResponseEntity<TicketDTO> closeTicket(@PathVariable Long id) {
+        TicketDTO updatedTicket = this.ticketService.closeTicket(id);
+
         return ResponseEntity.ok(updatedTicket);
     }
 }
