@@ -90,4 +90,12 @@ public class TicketController {
                 id, ticketDTO, ticketPriority, ticketCategory, description, ticketStatus);
         return ResponseEntity.ok(updatedTicket);
     }
+
+    @Operation(summary = "Assign Technician", description = "Assign Technician to Ticket")
+    @ApiResponse(responseCode = "200", description = "Technician assigned successfully")
+    @PutMapping("/{id}/technician/{technicianId}")
+    public ResponseEntity<TicketDTO> assignTechnician(@PathVariable Long id, @PathVariable Long technicianId) {
+        TicketDTO updatedTicket = this.ticketService.assignTechnician(id, technicianId);
+        return ResponseEntity.ok(updatedTicket);
+    }
 }

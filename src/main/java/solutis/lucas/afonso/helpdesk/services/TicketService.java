@@ -3,7 +3,11 @@ package solutis.lucas.afonso.helpdesk.services;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
@@ -16,9 +20,20 @@ import solutis.lucas.afonso.helpdesk.repository.TicketRepository;
 @Service
 public class TicketService {
     private TicketRepository ticketRepository;
+    private RabbitTemplate rabbitTemplate;
+    private ObjectMapper objectMapper;
+    private String rabbitExchange;
+    private String rabbitRoutingKey;
 
-    public TicketService(TicketRepository ticketRepository) {
+    public TicketService(TicketRepository ticketRepository, RabbitTemplate rabbitTemplate,
+            ObjectMapper objectMapper,
+            @Value("${helpdesk.rabbitmq.exchange}") String rabbitExchange,
+            @Value("${helpdesk.rabbitmq.routing-key}") String rabbitRoutingKey) {
         this.ticketRepository = ticketRepository;
+        this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = objectMapper;
+        this.rabbitExchange = rabbitExchange;
+        this.rabbitRoutingKey = rabbitRoutingKey;
     }
 
     public TicketDTO create(TicketDTO ticketDTO) {
@@ -67,5 +82,46 @@ public class TicketService {
         ticket.setUpdatedAt(LocalDateTime.now());
 
         return new TicketDTO(this.ticketRepository.save(ticket));
+    }
+
+    public TicketDTO assignTechnician(Long id, Long technicianId) {
+        Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
+        if (technicianId == null) {
+            throw new IllegalArgumentException("technicianId is required");
+        }
+
+        TechnicianUser technician = requestTechnician(technicianId);
+        if (technician == null || technician.userId() == null) {
+            throw new IllegalArgumentException("The user is not an active technician: " + technicianId);
+        }
+
+        ticket.setTechnicianId(technician.userId());
+        ticket.setUpdatedAt(LocalDateTime.now());
+        Ticket updatedTicket = this.ticketRepository.save(ticket);
+
+        return new TicketDTO(updatedTicket);
+    }
+
+    private TechnicianUser requestTechnician(Long technicianId) {
+        TechnicianRequest request = new TechnicianRequest(technicianId);
+        try {
+            String requestJson = this.objectMapper.writeValueAsString(request);
+            Object response = this.rabbitTemplate.convertSendAndReceive(this.rabbitExchange, this.rabbitRoutingKey, requestJson);
+            if (response == null) {
+                throw new IllegalStateException("User Service did not respond");
+            }
+
+            String responseJson = response instanceof byte[] bytes? new String(bytes, java.nio.charset.StandardCharsets.UTF_8)
+                    : response.toString();
+            return this.objectMapper.readValue(responseJson, TechnicianUser.class);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Invalid technician response", exception);
+        }
+    }
+
+    private record TechnicianRequest(Long technicianId) {
+    }
+
+    private record TechnicianUser(Long userId) {
     }
 }
