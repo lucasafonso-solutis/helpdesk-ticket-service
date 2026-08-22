@@ -103,7 +103,7 @@ public class TicketController {
 
     @Operation(summary = "Close Ticket", description = "Close Ticket")
     @ApiResponse(responseCode = "200", description = "Close Ticket")
-    @DeleteMapping("/close/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<TicketDTO> closeTicket(@PathVariable Long id) {
         TicketDTO updatedTicket = this.ticketService.closeTicket(id);
 
