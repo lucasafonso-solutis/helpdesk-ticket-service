@@ -15,6 +15,8 @@ import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
 import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
+import solutis.lucas.afonso.helpdesk.events.TicketCreated;
+import solutis.lucas.afonso.helpdesk.events.TicketStatusChanged;
 import solutis.lucas.afonso.helpdesk.events.TechnicianAssignmentEvent;
 import solutis.lucas.afonso.helpdesk.repository.TicketRepository;
 
@@ -25,21 +27,30 @@ public class TicketService {
     private ObjectMapper objectMapper;
     private String rabbitExchange;
     private String rabbitRoutingKey;
+    private String ticketCreatedRoutingKey;
+    private String ticketStatusChangedRoutingKey;
 
     public TicketService(TicketRepository ticketRepository, RabbitTemplate rabbitTemplate,
             ObjectMapper objectMapper,
             @Value("${helpdesk.rabbitmq.exchange}") String rabbitExchange,
-            @Value("${helpdesk.rabbitmq.routing-key}") String rabbitRoutingKey) {
+            @Value("${helpdesk.rabbitmq.routing-key}") String rabbitRoutingKey,
+            @Value("${helpdesk.rabbitmq.ticket-created-routing-key}") String ticketCreatedRoutingKey,
+            @Value("${helpdesk.rabbitmq.ticket-status-changed-routing-key}") String ticketStatusChangedRoutingKey) {
         this.ticketRepository = ticketRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
         this.rabbitExchange = rabbitExchange;
         this.rabbitRoutingKey = rabbitRoutingKey;
+        this.ticketCreatedRoutingKey = ticketCreatedRoutingKey;
+        this.ticketStatusChangedRoutingKey = ticketStatusChangedRoutingKey;
     }
 
     public TicketDTO create(TicketDTO ticketDTO) {
         Ticket ticket = new Ticket(ticketDTO);
         ticket = ticketRepository.save(ticket);
+        publishEvent(new TicketCreated(ticket.getId(), ticket.getCustomerId(), ticket.getTitle(),
+            ticket.getPriority(), ticket.getTicketStatus(), ticket.getTicketCategory()),
+            this.ticketCreatedRoutingKey, "Could not create ticket created event");
 
         return new TicketDTO(ticket);
     }
@@ -68,6 +79,7 @@ public class TicketService {
     public TicketDTO updateTicket(Long id, TicketPriority ticketPriority, TicketCategory ticketCategory, 
                                     String description, TicketStatus ticketStatus) {                                 
         Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
+        TicketStatus previousStatus = ticket.getTicketStatus();
         if (ticketPriority != null) {
             ticket.setPriority(ticketPriority);
         }
@@ -81,8 +93,14 @@ public class TicketService {
             ticket.setTicketStatus(ticketStatus);
         }
         ticket.setUpdatedAt(LocalDateTime.now());
+        Ticket savedTicket = this.ticketRepository.save(ticket);
+        if (ticketStatus != null && previousStatus != ticketStatus) {
+            publishEvent(new TicketStatusChanged(savedTicket.getId(), savedTicket.getCustomerId(),
+                previousStatus, savedTicket.getTicketStatus()),
+                this.ticketStatusChangedRoutingKey, "Could not create ticket status changed event");
+        }
 
-        return new TicketDTO(this.ticketRepository.save(ticket));
+        return new TicketDTO(savedTicket);
     }
 
     public TicketDTO assignTechnician(Long id, Long technicianId) {
@@ -105,9 +123,25 @@ public class TicketService {
 
     public TicketDTO closeTicket(Long id) {
         Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
+        TicketStatus previousStatus = ticket.getTicketStatus();
         ticket.setTicketStatus(TicketStatus.CLOSED);
         ticket.setUpdatedAt(LocalDateTime.now());
+        Ticket savedTicket = this.ticketRepository.save(ticket);
+        if (previousStatus != TicketStatus.CLOSED) {
+            publishEvent(new TicketStatusChanged(savedTicket.getId(), savedTicket.getCustomerId(),
+                    previousStatus, savedTicket.getTicketStatus()),
+                    this.ticketStatusChangedRoutingKey, "Could not create ticket status changed event");
+        }
 
-        return new TicketDTO(this.ticketRepository.save(ticket));
+        return new TicketDTO(savedTicket);
+    }
+
+    private void publishEvent(Object event, String routingKey, String errorMessage) {
+        try {
+            this.rabbitTemplate.convertAndSend(this.rabbitExchange, routingKey,
+                    this.objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(errorMessage, exception);
+        }
     }
 }
