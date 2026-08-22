@@ -90,38 +90,18 @@ public class TicketService {
             throw new IllegalArgumentException("technicianId is required");
         }
 
-        TechnicianUser technician = requestTechnician(technicianId);
-        if (technician == null || technician.userId() == null) {
-            throw new IllegalArgumentException("The user is not an active technician: " + technicianId);
-        }
-
-        ticket.setTechnicianId(technician.userId());
-        ticket.setUpdatedAt(LocalDateTime.now());
-        Ticket updatedTicket = this.ticketRepository.save(ticket);
-
-        return new TicketDTO(updatedTicket);
-    }
-
-    private TechnicianUser requestTechnician(Long technicianId) {
-        TechnicianRequest request = new TechnicianRequest(technicianId);
+        TechnicianAssignmentEvent event = new TechnicianAssignmentEvent(
+            ticket.getId(), technicianId);
         try {
-            String requestJson = this.objectMapper.writeValueAsString(request);
-            Object response = this.rabbitTemplate.convertSendAndReceive(this.rabbitExchange, this.rabbitRoutingKey, requestJson);
-            if (response == null) {
-                throw new IllegalStateException("User Service did not respond");
-            }
-
-            String responseJson = response instanceof byte[] bytes? new String(bytes, java.nio.charset.StandardCharsets.UTF_8)
-                    : response.toString();
-            return this.objectMapper.readValue(responseJson, TechnicianUser.class);
+            String eventJson = this.objectMapper.writeValueAsString(event);
+            this.rabbitTemplate.convertAndSend(this.rabbitExchange, this.rabbitRoutingKey, eventJson);
         } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Invalid technician response", exception);
+            throw new IllegalStateException("Could not create technician assignment event", exception);
         }
+
+        return new TicketDTO(ticket);
     }
 
-    private record TechnicianRequest(Long technicianId) {
-    }
-
-    private record TechnicianUser(Long userId) {
+    private record TechnicianAssignmentEvent(Long ticketId, Long technicianId) {
     }
 }
