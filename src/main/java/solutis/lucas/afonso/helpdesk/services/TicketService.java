@@ -1,7 +1,9 @@
 package solutis.lucas.afonso.helpdesk.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
@@ -47,5 +49,23 @@ public class TicketService {
             .toList();
     }
 
+    public TicketDTO updateTicket(Long id, TicketDTO ticketDTO, TicketPriority ticketPriority, TicketCategory ticketCategory, 
+                                    String description, TicketStatus ticketStatus) {                                 
+        Ticket ticket = this.ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket not found: " + id));
+        if (ticketPriority != null) {
+            ticket.setPriority(ticketPriority);
+        }
+        if (ticketCategory != null) {
+            ticket.setTicketCategory(ticketCategory);
+        }
+        if (description != null) {
+            ticket.setDescription(description);
+        }
+        if (ticketStatus != null) {
+            ticket.setTicketStatus(ticketStatus);
+        }
+        ticket.setUpdatedAt(LocalDateTime.now());
 
+        return new TicketDTO(this.ticketRepository.save(ticket));
+    }
 }

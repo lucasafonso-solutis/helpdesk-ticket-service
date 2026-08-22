@@ -3,11 +3,11 @@ package solutis.lucas.afonso.helpdesk.controllers;
 import java.net.URI;
 import java.util.List;
 
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,8 +34,7 @@ public class TicketController {
     @Operation(summary = "Create Ticket", description = "Create Ticket")
     @ApiResponse(responseCode = "201", description = "Create Ticket")
     @PostMapping
-    public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO,
-        UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<TicketDTO> createTicket(@RequestBody TicketDTO ticketDTO, UriComponentsBuilder uriComponentsBuilder) {
         TicketDTO ticket = this.ticketService.create(ticketDTO);
         URI uri = uriComponentsBuilder.path("/tickets/{id}").buildAndExpand(ticket.id()).toUri();
 
@@ -75,5 +74,20 @@ public class TicketController {
             @RequestParam(required = false) TicketPriority ticketPriority,
             @RequestParam(required = false) TicketCategory ticketCategory) {
         return this.ticketService.filterTickets(ticketStatus, ticketPriority, ticketCategory);
+    }
+
+    @Operation(summary = "Update Ticket", description = "Update Ticket")
+    @ApiResponse(responseCode = "200", description = "Update Ticket")
+    @PutMapping("/{id}")
+    public ResponseEntity<TicketDTO> updateTicket(
+            @PathVariable Long id,
+            @RequestBody(required = false) TicketDTO ticketDTO,
+            @RequestParam(required = false) TicketPriority ticketPriority,
+            @RequestParam(required = false) TicketCategory ticketCategory,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) TicketStatus ticketStatus) {
+        TicketDTO updatedTicket = this.ticketService.updateTicket(
+                id, ticketDTO, ticketPriority, ticketCategory, description, ticketStatus);
+        return ResponseEntity.ok(updatedTicket);
     }
 }
