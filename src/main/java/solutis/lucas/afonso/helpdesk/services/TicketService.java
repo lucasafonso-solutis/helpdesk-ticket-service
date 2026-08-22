@@ -1,8 +1,6 @@
 package solutis.lucas.afonso.helpdesk.services;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 

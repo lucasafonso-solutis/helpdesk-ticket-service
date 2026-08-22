@@ -1,7 +1,6 @@
 package solutis.lucas.afonso.helpdesk.controllers;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
