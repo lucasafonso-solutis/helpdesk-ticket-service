@@ -73,14 +73,9 @@ public class TicketController {
     @ApiResponse(responseCode = "200", description = "Filter Tickets")
     @GetMapping("/filter")
     public List<TicketDTO> filterTickets(
-            @RequestParam(required = false) TicketPriority ticketPriority,
             @RequestParam(required = false) TicketStatus ticketStatus,
-            @RequestParam(required = false) TicketCategory ticketCategory,
-            @RequestParam(required = false) Long custumerId,
-            @RequestParam(required = false) Long technicianId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdAt,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime updatedAt) {
-        return this.ticketService.filterTickets(ticketPriority, ticketStatus, ticketCategory,
-                custumerId, technicianId, createdAt, updatedAt);
+            @RequestParam(required = false) TicketPriority ticketPriority,
+            @RequestParam(required = false) TicketCategory ticketCategory) {
+        return this.ticketService.filterTickets(ticketStatus, ticketPriority, ticketCategory);
     }
 }

@@ -40,17 +40,14 @@ public class TicketService {
         return this.ticketRepository.findByTitle(title).stream().map(TicketDTO::new).toList();
     }
 
-    public List<TicketDTO> filterTickets(TicketPriority ticketPriority, TicketStatus ticketStatus, TicketCategory ticketCategory, 
-                                            Long custumerId, Long technicianId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public List<TicketDTO> filterTickets(TicketStatus ticketStatus, TicketPriority ticketPriority, TicketCategory ticketCategory) {
         return this.ticketRepository.findAll().stream()
             .filter(ticket -> ticketPriority == null || ticket.getPriority() == ticketPriority)
             .filter(ticket -> ticketStatus == null || ticket.getTicketStatus() == ticketStatus)
             .filter(ticket -> ticketCategory == null || ticket.getTicketCategory() == ticketCategory)
-            .filter(ticket -> custumerId == null || Objects.equals(ticket.getCustomerId(), custumerId))
-            .filter(ticket -> technicianId == null || Objects.equals(ticket.getTechnicianId(), technicianId))
-            .filter(ticket -> createdAt == null || Objects.equals(ticket.getCreatedAt(), createdAt))
-            .filter(ticket -> updatedAt == null || Objects.equals(ticket.getUpdatedAt(), updatedAt))
             .map(TicketDTO::new)
             .toList();
     }
+
+
 }
