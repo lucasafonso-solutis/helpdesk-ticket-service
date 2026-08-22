@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -102,7 +103,7 @@ public class TicketController {
 
     @Operation(summary = "Close Ticket", description = "Close Ticket")
     @ApiResponse(responseCode = "200", description = "Close Ticket")
-    @PutMapping("/close/{id}")
+    @DeleteMapping("/close/{id}")
     public ResponseEntity<TicketDTO> closeTicket(@PathVariable Long id) {
         TicketDTO updatedTicket = this.ticketService.closeTicket(id);
 
