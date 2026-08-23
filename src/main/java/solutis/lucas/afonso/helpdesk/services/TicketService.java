@@ -109,8 +109,7 @@ public class TicketService {
             throw new IllegalArgumentException("technicianId is required");
         }
 
-        TechnicianAssignmentEvent event = new TechnicianAssignmentEvent(
-            ticket.getId(), technicianId);
+        TechnicianAssignmentEvent event = new TechnicianAssignmentEvent(ticket.getId(), technicianId, ticket.getCustomerId());
         try {
             String eventJson = this.objectMapper.writeValueAsString(event);
             this.rabbitTemplate.convertAndSend(this.rabbitExchange, this.rabbitRoutingKey, eventJson);
