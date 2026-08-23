@@ -1,5 +1,5 @@
 package solutis.lucas.afonso.helpdesk.events;
 
-public record TechnicianAssignmentEvent(Long ticketId, Long technicianId, Long custumerId) implements Event{
+public record TechnicianAssignmentEvent(Long ticketId, Long technicianId, Long customerId) implements Event {
 
 }
