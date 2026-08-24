@@ -2,8 +2,10 @@ package solutis.lucas.afonso.helpdesk.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -123,6 +125,10 @@ public class TicketService {
     @RabbitListener(queues = RabbitMQConfig.TECHNICIAN_ASSIGNMENT_RESULT_QUEUE)
     public void handleTechnicianAssignmentResult(String eventJson) {
         try {
+            JsonNode eventNode = this.objectMapper.readTree(eventJson);
+            if (eventNode.isTextual()) {
+                eventJson = eventNode.textValue();
+            }
             TechnicianAssignmentResult event = this.objectMapper.readValue(eventJson, TechnicianAssignmentResult.class);
                 if (!Boolean.TRUE.equals(event.accepted())) {
                     return;
@@ -131,8 +137,8 @@ public class TicketService {
             ticket.setTechnicianId(event.technicianId());
             ticket.setUpdatedAt(LocalDateTime.now());
             Ticket savedTicket = this.ticketRepository.save(ticket);
-            this.publishEvent(new TicketAssigned(savedTicket.getId(), savedTicket.getCustomerId(), savedTicket.getTechnicianId()),
-                this.ticketAssignedRoutingKey, "Could not create ticket assigned event");
+            this.publishEvent(new TicketAssigned(savedTicket.getId(), savedTicket.getCustomerId(), savedTicket.getTechnicianId(),
+                    savedTicket.getTicketStatus().name()), this.ticketAssignedRoutingKey, "Could not create ticket assigned event");
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Could not read technician assignment result event", exception);
         }
@@ -155,7 +161,10 @@ public class TicketService {
 
     private void publishEvent(Event event, String routingKey, String errorMessage) {
         try {
-            this.rabbitTemplate.convertAndSend(this.rabbitExchange, routingKey, this.objectMapper.writeValueAsString(event));
+            this.rabbitTemplate.convertAndSend(this.rabbitExchange, routingKey, this.objectMapper.writeValueAsString(event), message -> {
+                message.getMessageProperties().setMessageId(UUID.randomUUID().toString());
+                return message;
+            });
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException(errorMessage, exception);
         }
