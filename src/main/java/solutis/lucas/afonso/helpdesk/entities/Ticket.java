@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
 
 @Entity(name = "tickets")
@@ -28,7 +29,8 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TicketCategory ticketCategory;
-    @Column(name = "customer_id", nullable = true)
+    @Column(name = "customer_id")
+    @NotNull(message = "customerId é obrigatório")
     private Long customerId;
     @Column(name = "technician_id", nullable = true)
     private Long technicianId;

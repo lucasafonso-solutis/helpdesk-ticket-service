@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
+import solutis.lucas.afonso.helpdesk.clients.UserClient;
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
@@ -32,6 +34,7 @@ public class TicketService {
     private TicketRepository ticketRepository;
     private RabbitTemplate rabbitTemplate;
     private ObjectMapper objectMapper;
+    private UserClient userClient;
     private String rabbitExchange;
     private String rabbitRoutingKey;
     private String ticketAssignedRoutingKey;
@@ -39,6 +42,7 @@ public class TicketService {
     private String ticketStatusChangedRoutingKey;
 
     public TicketService(TicketRepository ticketRepository, RabbitTemplate rabbitTemplate, ObjectMapper objectMapper,
+                            UserClient userClient,
                             @Value("${helpdesk.rabbitmq.exchange}") String rabbitExchange,
                             @Value("${helpdesk.rabbitmq.routing-key}") String rabbitRoutingKey,
                             @Value("${helpdesk.rabbitmq.ticket-assigned-routing-key}") String ticketAssignedRoutingKey,
@@ -47,6 +51,7 @@ public class TicketService {
         this.ticketRepository = ticketRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
+        this.userClient = userClient;
         this.rabbitExchange = rabbitExchange;
         this.rabbitRoutingKey = rabbitRoutingKey;
         this.ticketAssignedRoutingKey = ticketAssignedRoutingKey;
@@ -55,6 +60,9 @@ public class TicketService {
     }
 
     public TicketDTO create(TicketDTO ticketDTO) {
+        if (ticketDTO.customerId() != null && !userClient.existsById(ticketDTO.customerId())) {
+            throw new EntityNotFoundException("Cliente não encontrado: " + ticketDTO.customerId());
+        }
         Ticket ticket = new Ticket(ticketDTO);
         ticket = ticketRepository.save(ticket);
         this.publishEvent(new TicketCreated(ticket.getId(), ticket.getCustomerId(), ticket.getTitle(),
@@ -94,8 +102,8 @@ public class TicketService {
         if (ticketCategory != null) {
             ticket.setTicketCategory(ticketCategory);
         }
-        if (description != null) {
-            ticket.setDescription(description);
+        if (description != null && description.isBlank()) {
+            throw new IllegalArgumentException("Description can't be blank");
         }
         if (ticketStatus != null) {
             ticket.setTicketStatus(ticketStatus);
@@ -139,8 +147,9 @@ public class TicketService {
             Ticket savedTicket = this.ticketRepository.save(ticket);
             this.publishEvent(new TicketAssigned(savedTicket.getId(), savedTicket.getCustomerId(), savedTicket.getTechnicianId(),
                     savedTicket.getTicketStatus().name()), this.ticketAssignedRoutingKey, "Could not create ticket assigned event");
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Could not read technician assignment result event", exception);
+        } catch (JsonProcessingException | EntityNotFoundException exception) {
+            throw new AmqpRejectAndDontRequeueException(
+                    "Invalid technician assignment result event", exception);
         }
     }
 

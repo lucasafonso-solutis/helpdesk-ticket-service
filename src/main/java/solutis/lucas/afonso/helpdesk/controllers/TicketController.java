@@ -17,6 +17,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
@@ -35,7 +36,7 @@ public class TicketController {
     @Operation(summary = "Create Ticket", description = "Create Ticket")
     @ApiResponse(responseCode = "201", description = "Create Ticket")
     @PostMapping
-    public ResponseEntity<TicketDTO> createTicket(@RequestBody TicketDTO ticketDTO, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO, UriComponentsBuilder uriComponentsBuilder) {
         TicketDTO ticket = this.ticketService.create(ticketDTO);
         URI uri = uriComponentsBuilder.path("/tickets/{id}").buildAndExpand(ticket.id()).toUri();
 

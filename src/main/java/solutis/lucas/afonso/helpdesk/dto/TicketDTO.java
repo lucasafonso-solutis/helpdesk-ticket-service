@@ -9,9 +9,9 @@ import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
 import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
 
-public record TicketDTO(Long id, @NotBlank String title, @NotBlank String description,
-            @NotNull TicketPriority priority, TicketStatus ticketStatus,
-            @NotNull TicketCategory ticketCategory, Long customerId, Long technicianId, LocalDateTime createdAt,
+public record TicketDTO(Long id, @NotBlank String title, String description,
+            TicketPriority priority, TicketStatus ticketStatus,
+            TicketCategory ticketCategory, Long customerId, Long technicianId, LocalDateTime createdAt,
             LocalDateTime updatedAt) {
         
     public TicketDTO(Ticket ticket) {
