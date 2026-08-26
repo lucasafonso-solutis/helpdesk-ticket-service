@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,7 @@ public class TicketController {
 
     @Operation(summary = "Create Ticket", description = "Create Ticket")
     @ApiResponse(responseCode = "201", description = "Create Ticket")
+    @PreAuthorize("hasAnyRole('CLIENT', 'TECHNICIAN', 'ADMIN')")
     @PostMapping
     public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketDTO ticketDTO, UriComponentsBuilder uriComponentsBuilder) {
         TicketDTO ticket = this.ticketService.create(ticketDTO);
@@ -45,6 +47,7 @@ public class TicketController {
 
     @Operation(summary = "List Ticket by ID", description = "List Ticket By ID")
     @ApiResponse(responseCode = "200", description = "List Ticket By ID")
+    @PreAuthorize("hasAnyRole('CLIENT', 'TECHNICIAN', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<TicketDTO> findById(@PathVariable Long id) {
         return ticketService.listById(id)
@@ -80,6 +83,7 @@ public class TicketController {
 
     @Operation(summary = "Update Ticket", description = "Update Ticket")
     @ApiResponse(responseCode = "200", description = "Update Ticket")
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<TicketDTO> updateTicket(
             @PathVariable Long id,
@@ -95,6 +99,7 @@ public class TicketController {
 
     @Operation(summary = "Assign Technician", description = "Assign Technician to Ticket")
     @ApiResponse(responseCode = "200", description = "Technician assigned successfully")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/technician/{technicianId}")
     public ResponseEntity<TicketDTO> assignTechnician(@PathVariable Long id, @PathVariable Long technicianId) {
         TicketDTO updatedTicket = this.ticketService.assignTechnician(id, technicianId);
@@ -104,6 +109,7 @@ public class TicketController {
 
     @Operation(summary = "Close Ticket", description = "Close Ticket")
     @ApiResponse(responseCode = "200", description = "Close Ticket")
+    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<TicketDTO> closeTicket(@PathVariable Long id) {
         TicketDTO updatedTicket = this.ticketService.closeTicket(id);
