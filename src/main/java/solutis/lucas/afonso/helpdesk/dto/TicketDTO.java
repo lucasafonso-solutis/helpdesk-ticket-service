@@ -3,7 +3,6 @@ package solutis.lucas.afonso.helpdesk.dto;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
