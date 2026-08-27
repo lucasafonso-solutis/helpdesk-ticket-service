@@ -8,7 +8,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -29,6 +31,7 @@ import solutis.lucas.afonso.helpdesk.events.TechnicianAssignmentEvent;
 import solutis.lucas.afonso.helpdesk.events.TechnicianAssignmentResult;
 import solutis.lucas.afonso.helpdesk.config.RabbitMQConfig;
 import solutis.lucas.afonso.helpdesk.repository.TicketRepository;
+import solutis.lucas.afonso.helpdesk.repository.TicketSpecification;
 
 @Service
 public class TicketService {
@@ -72,11 +75,31 @@ public class TicketService {
     }
 
     public Page<TicketDTO> list(Pageable pageable) {
-        return this.ticketRepository.findAll(pageable).map(TicketDTO::new);
+        return this.list(null, null, null, null, null, null, null, null, pageable);
     }
 
     public Page<TicketDTO> listByTechnician(Long technicianId, Pageable pageable) {
-        return this.ticketRepository.findByTechnicianId(technicianId, pageable).map(TicketDTO::new);
+        return this.list(null, null, null, null, null, technicianId, null, null, pageable);
+    }
+
+    public Page<TicketDTO> list(String search, TicketStatus status, TicketPriority priority, TicketCategory category, Long customerId, 
+                                Long technicianId, LocalDateTime createdFrom, LocalDateTime createdTo, Pageable pageable) {
+        return this.ticketRepository.findAll(TicketSpecification.withFilters(
+                search, status, priority, category, customerId, technicianId, createdFrom, createdTo,
+                isPriorityDescending(pageable)), withoutPrioritySort(pageable))
+                .map(TicketDTO::new);
+    }
+
+    private boolean isPriorityDescending(Pageable pageable) {
+        return pageable.getSort().getOrderFor("priority") != null
+                && pageable.getSort().getOrderFor("priority").isDescending();
+    }
+
+    private Pageable withoutPrioritySort(Pageable pageable) {
+        if (!isPriorityDescending(pageable)) {
+            return pageable;
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.unsorted());
     }
 
     public List<TicketDTO> searchByTitle(String title) {

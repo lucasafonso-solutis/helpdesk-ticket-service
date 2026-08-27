@@ -1,6 +1,7 @@
 package solutis.lucas.afonso.helpdesk.controllers;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.Valid;
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
@@ -62,11 +64,18 @@ public class TicketController {
     @Operation(summary = "List All Tickets", description = "List All Tickets")
     @ApiResponse(responseCode = "200", description = "List All Tickets")
     @GetMapping
-    public Page<TicketDTO> list(@RequestParam(required = false) Long technicianId, Pageable pageable) {
-        if (technicianId != null) {
-            return this.ticketService.listByTechnician(technicianId, pageable);
-        }
-        return this.ticketService.list(pageable);
+    public Page<TicketDTO> list(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) TicketCategory category,
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) Long technicianId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdTo, Pageable pageable) {
+        return this.ticketService.list(
+                search, status, priority, category, customerId, technicianId,
+                createdFrom, createdTo, pageable);
     }
 
     @Operation(summary = "Search Ticket By Title", description = "Search Ticket By Title")
