@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
+import solutis.lucas.afonso.helpdesk.dto.TicketMetricsDTO;
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
@@ -88,6 +89,22 @@ public class TicketService {
                 search, status, priority, category, customerId, technicianId, createdFrom, createdTo,
                 isPriorityDescending(pageable)), withoutPrioritySort(pageable))
                 .map(TicketDTO::new);
+    }
+
+    public TicketMetricsDTO metrics(String search, TicketCategory category, Long customerId,
+                                   Long technicianId, LocalDateTime createdFrom, LocalDateTime createdTo) {
+        long total = count(search, null, null, category, customerId, technicianId, createdFrom, createdTo);
+        long open = count(search, TicketStatus.OPEN, null, category, customerId, technicianId, createdFrom, createdTo);
+        long inProgress = count(search, TicketStatus.IN_PROGRESS, null, category, customerId, technicianId, createdFrom, createdTo);
+        long resolved = count(search, TicketStatus.RESOLVED, null, category, customerId, technicianId, createdFrom, createdTo);
+        long critical = count(search, null, TicketPriority.CRITICAL, category, customerId, technicianId, createdFrom, createdTo);
+        return new TicketMetricsDTO(total, open, inProgress, resolved, critical);
+    }
+
+    private long count(String search, TicketStatus status, TicketPriority priority, TicketCategory category,
+                       Long customerId, Long technicianId, LocalDateTime createdFrom, LocalDateTime createdTo) {
+        return this.ticketRepository.count(TicketSpecification.withFilters(
+                search, status, priority, category, customerId, technicianId, createdFrom, createdTo, false));
     }
 
     private boolean isPriorityDescending(Pageable pageable) {

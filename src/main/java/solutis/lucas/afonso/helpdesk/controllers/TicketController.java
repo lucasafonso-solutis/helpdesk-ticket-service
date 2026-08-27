@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.Valid;
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
+import solutis.lucas.afonso.helpdesk.dto.TicketMetricsDTO;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
 import solutis.lucas.afonso.helpdesk.entities.TicketStatus;
@@ -52,7 +53,7 @@ public class TicketController {
     @Operation(summary = "List Ticket by ID", description = "List Ticket By ID")
     @ApiResponse(responseCode = "200", description = "List Ticket By ID")
     @PreAuthorize("hasAnyRole('CLIENT', 'TECHNICIAN', 'ADMIN')")
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<TicketDTO> findById(@PathVariable Long id) {
         return ticketService.listById(id)
                 .stream()
@@ -76,6 +77,19 @@ public class TicketController {
         return this.ticketService.list(
                 search, status, priority, category, customerId, technicianId,
                 createdFrom, createdTo, pageable);
+    }
+
+    @Operation(summary = "Ticket metrics", description = "Return ticket metrics without pagination")
+    @ApiResponse(responseCode = "200", description = "Ticket metrics")
+    @GetMapping("/metrics")
+    public TicketMetricsDTO metrics(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) TicketCategory category,
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) Long technicianId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime createdTo) {
+        return this.ticketService.metrics(search, category, customerId, technicianId, createdFrom, createdTo);
     }
 
     @Operation(summary = "Search Ticket By Title", description = "Search Ticket By Title")
