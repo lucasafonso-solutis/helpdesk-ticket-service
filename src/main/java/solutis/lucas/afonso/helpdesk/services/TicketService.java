@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import solutis.lucas.afonso.helpdesk.dto.TicketDTO;
-import solutis.lucas.afonso.helpdesk.clients.UserClient;
 import solutis.lucas.afonso.helpdesk.entities.Ticket;
 import solutis.lucas.afonso.helpdesk.entities.TicketCategory;
 import solutis.lucas.afonso.helpdesk.entities.TicketPriority;
@@ -34,7 +33,6 @@ public class TicketService {
     private TicketRepository ticketRepository;
     private RabbitTemplate rabbitTemplate;
     private ObjectMapper objectMapper;
-    private UserClient userClient;
     private String rabbitExchange;
     private String rabbitRoutingKey;
     private String ticketAssignedRoutingKey;
@@ -42,7 +40,6 @@ public class TicketService {
     private String ticketStatusChangedRoutingKey;
 
     public TicketService(TicketRepository ticketRepository, RabbitTemplate rabbitTemplate, ObjectMapper objectMapper,
-                            UserClient userClient,
                             @Value("${helpdesk.rabbitmq.exchange}") String rabbitExchange,
                             @Value("${helpdesk.rabbitmq.routing-key}") String rabbitRoutingKey,
                             @Value("${helpdesk.rabbitmq.ticket-assigned-routing-key}") String ticketAssignedRoutingKey,
@@ -51,7 +48,6 @@ public class TicketService {
         this.ticketRepository = ticketRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = objectMapper;
-        this.userClient = userClient;
         this.rabbitExchange = rabbitExchange;
         this.rabbitRoutingKey = rabbitRoutingKey;
         this.ticketAssignedRoutingKey = ticketAssignedRoutingKey;
@@ -60,9 +56,6 @@ public class TicketService {
     }
 
     public TicketDTO create(TicketDTO ticketDTO) {
-        if (ticketDTO.customerId() != null && !userClient.existsById(ticketDTO.customerId())) {
-            throw new EntityNotFoundException("Cliente não encontrado: " + ticketDTO.customerId());
-        }
         Ticket ticket = new Ticket(ticketDTO);
         ticket = ticketRepository.save(ticket);
         this.publishEvent(new TicketCreated(ticket.getId(), ticket.getCustomerId(), ticket.getTitle(),
