@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -69,8 +71,12 @@ public class TicketService {
         return this.ticketRepository.findById(id).stream().map(TicketDTO::new).toList();
     }
 
-    public List<TicketDTO> list() {
-        return this.ticketRepository.findAll().stream().map(TicketDTO::new).toList();
+    public Page<TicketDTO> list(Pageable pageable) {
+        return this.ticketRepository.findAll(pageable).map(TicketDTO::new);
+    }
+
+    public Page<TicketDTO> listByTechnician(Long technicianId, Pageable pageable) {
+        return this.ticketRepository.findByTechnicianId(technicianId, pageable).map(TicketDTO::new);
     }
 
     public List<TicketDTO> searchByTitle(String title) {

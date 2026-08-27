@@ -3,6 +3,8 @@ package solutis.lucas.afonso.helpdesk.controllers;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -60,8 +62,11 @@ public class TicketController {
     @Operation(summary = "List All Tickets", description = "List All Tickets")
     @ApiResponse(responseCode = "200", description = "List All Tickets")
     @GetMapping
-    public List<TicketDTO> list() {
-        return this.ticketService.list();
+    public Page<TicketDTO> list(@RequestParam(required = false) Long technicianId, Pageable pageable) {
+        if (technicianId != null) {
+            return this.ticketService.listByTechnician(technicianId, pageable);
+        }
+        return this.ticketService.list(pageable);
     }
 
     @Operation(summary = "Search Ticket By Title", description = "Search Ticket By Title")
