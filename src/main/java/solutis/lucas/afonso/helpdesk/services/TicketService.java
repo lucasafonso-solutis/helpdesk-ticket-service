@@ -141,8 +141,11 @@ public class TicketService {
         if (ticketCategory != null) {
             ticket.setTicketCategory(ticketCategory);
         }
-        if (description != null && description.isBlank()) {
-            throw new IllegalArgumentException("Description can't be blank");
+        if (description != null) {
+            if (description.isBlank()) {
+                throw new IllegalArgumentException("Description can't be blank");
+            }
+            ticket.setDescription(description);
         }
         if (ticketStatus != null) {
             ticket.setTicketStatus(ticketStatus);
